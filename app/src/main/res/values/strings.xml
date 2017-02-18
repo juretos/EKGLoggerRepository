@@ -13,5 +13,6 @@
     <string name="enter_ekg_url">Enter url to EKGLoggin RestService</string>
     <string name="menu_settings">Settings</string>
     <string name="ser_set">Server settings</string>
+    <string name="integer">Insert integer value.</string>
 
 </resources>

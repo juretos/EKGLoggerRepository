@@ -116,15 +116,18 @@ public class MainActivity extends AppCompatActivity {
         else{
             SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
             String mUrl = sharedPref.getString(URL, getResources().getString(R.string.default_url));
-            int rr = Integer.parseInt(rrET.getText().toString());
-            JSONObject jObject = new JSONObject();
-            try {
+            try{
+                int rr = Integer.parseInt(rrET.getText().toString());
+                JSONObject jObject = new JSONObject();
                 jObject.put(IDENTIFICATION, "3625086225");
                 jObject.put(RR, rr);
-            } catch (JSONException e) {
+                new PostAsyncTask(this,rr).execute(mUrl,jObject.toString());
+            }catch (JSONException e) {
                 e.printStackTrace();
+            }catch(NumberFormatException  e){
+                e.printStackTrace();
+                Toast.makeText(this, getResources().getString(R.string.integer), Toast.LENGTH_SHORT).show();
             }
-            new PostAsyncTask(this,rr).execute(mUrl,jObject.toString());
         }
 
     }
