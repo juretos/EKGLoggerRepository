@@ -107,7 +107,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         if(number==0|sum==0){
             return result;
         }
-        return sum/number;
+        return (double)sum*1.0/number;
 
     }
 }
