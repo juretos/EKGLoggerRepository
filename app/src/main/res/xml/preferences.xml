@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="@string/ser_set" >
+        <EditTextPreference
+            android:defaultValue="@string/default_url"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="@string/enter_ekg_url"
+            android:key="URL" />
+    </PreferenceCategory>
+</PreferenceScreen>
