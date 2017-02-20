@@ -6,9 +6,9 @@
     <string name="bpm">BPM</string>
     <string name="enter_value">Please enter the RR interval value.</string>
     <string name="check_rr_value">Checking the validity of RR value</string>
-    <string name="default_url">http://213.143.69.12:8080/check_rr_value</string>
+    <string name="default_url">https://mrecords.mesi.si/check_rr_value</string>
     <string name="no_network">Please check your network connection and try again.</string>
-    <string name="rr_invalid">RR interval value must be between 0 and 2000.</string>
+    <string name="rr_invalid">RR interval value must be between 300 and 1500.</string>
     <string name="internal_server_error">Error on server side. Please, try again later.</string>
     <string name="enter_ekg_url">Enter url to EKGLoggin RestService</string>
     <string name="menu_settings">Settings</string>

@@ -9,7 +9,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -25,28 +24,33 @@ import android.widget.Toast;
 
 import com.task.ekglogger.database.DataBaseHelper;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.CoreProtocolPNames;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
-import java.net.URL;
-
-import javax.net.ssl.HttpsURLConnection;
 
 public class MainActivity extends AppCompatActivity {
     TextView rhText;
     EditText rrET;
     DataBaseHelper databaseHelper;
-    private String IDENTIFICATION = "identification";
-    private String RR = "rr";
+    private String IDENTIFICATION = "Identification";
+    private String RR = "RR";
     private String URL = "URL";
+    private String STATUS ="Status";
+    private String ERROR ="Error";
 
 
     @Override
@@ -188,58 +192,59 @@ public class MainActivity extends AppCompatActivity {
             String url = params[0];
             String data = params[1];
             int statusCode = HttpURLConnection.HTTP_INTERNAL_ERROR;
-            HttpURLConnection httpcon;
-            String result = null;
+            String result;
             int status = -1;
             String error;
+
+            HttpParams httpParameters = new BasicHttpParams();
+            httpParameters.setParameter(CoreProtocolPNames.USER_AGENT,
+                    System.getProperty("http.agent"));
+            // Set the timeout in milliseconds until a connection is established.
+            // The default value is zero, that means the timeout is not used.
+            int timeoutConnection = 60*1000;
+            HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
+            // Set the default socket timeout (SO_TIMEOUT)
+            // in milliseconds which is the timeout for waiting for data.
+            int timeoutSocket = 60*1000;
+
+            HttpConnectionParams.setSoTimeout(httpParameters, timeoutSocket);
+            HttpClient httpclient = new DefaultHttpClient(httpParameters);
+            HttpPost httppost = new HttpPost(url);
+            httppost.setHeader("Content-Type", "application/json");
             try {
-                //Connect
-                httpcon = (HttpURLConnection) ((new URL(url).openConnection()));
-                httpcon.setDoOutput(true);
-                httpcon.setRequestProperty("Content-Type", "application/json");
-                httpcon.setRequestProperty("Accept", "application/json");
-                httpcon.setRequestMethod("POST");
-                httpcon.setConnectTimeout(socketTimeout);
-                httpcon.setReadTimeout(socketTimeout);
-                httpcon.connect();
-
-                //Write
-                if (data != null) {
-                    OutputStream os = httpcon.getOutputStream();
-                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
-                    writer.write(data);
-                    writer.close();
-                    os.close();
-                }
-
-                //Read
-                statusCode = httpcon.getResponseCode();
-                Log.i(TAG, "Post status: " + statusCode);
-                BufferedReader br = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));
-                String line = null;
-                StringBuilder sb = new StringBuilder();
-                while ((line = br.readLine()) != null) {
-                    sb.append(line);
-                }
-                br.close();
-                result = sb.toString();
-                if (result != null && statusCode == HttpsURLConnection.HTTP_OK) {
-                    try {
-                        JSONObject jsonObject = new JSONObject(result);
-                        if (jsonObject.has("status")) {
-                            status = jsonObject.getInt("status");
+                StringEntity postingString = new StringEntity(data);
+                httppost.setEntity(postingString);
+                HttpResponse httpResponse = null;
+                httpResponse = httpclient.execute(httppost);
+                statusCode = httpResponse.getStatusLine().getStatusCode();
+                HttpEntity entity = httpResponse.getEntity();
+                if (entity != null) {
+                    InputStream input = null;
+                    input = entity.getContent();
+                    BufferedReader br = new BufferedReader(new InputStreamReader(input));
+                    String line = null;
+                    StringBuilder sb = new StringBuilder();
+                    while ((line = br.readLine()) != null) {
+                        sb.append(line);
+                    }
+                    br.close();
+                    result = sb.toString();
+                    Log.i(TAG, result);
+                    if (result != null) {
+                        try {
+                            JSONObject jsonObject = new JSONObject(result);
+                            if (jsonObject.has(STATUS)) {
+                                status = jsonObject.getInt(STATUS);
+                            }
+                            if (jsonObject.has(ERROR)) {
+                                error = jsonObject.getString(ERROR);
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
                         }
-                        if (jsonObject.has("error")) {
-                            error = jsonObject.getString("error");
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
                     }
                 }
-
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
+            }catch (Exception e) {
                 e.printStackTrace();
             }
             return status;
